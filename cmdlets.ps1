@@ -337,3 +337,36 @@ function Get-ReadingWithSudachi {
         $sudachi.GetReading() | Write-Output
     }
 }
+
+
+function Invoke-SortByReading {
+    param (
+        [parameter(ValueFromPipeline)][string[]]$inputLine
+    )
+    begin {
+        $lines = New-Object System.Collections.ArrayList
+    }
+    process {
+        $inputLine.ForEach({
+                $lines.Add($_) > $null
+            })
+    }
+    end {
+        $sudachi = [SudachiPy]::new($lines, $forBookIndex, $forBookIndex)
+        $sudachi.GetReading() | Sort-Object Normalized | ForEach-Object {$_.Line} | Write-Output
+    }
+}
+
+
+function Convert-LinesToBookIndexReading {
+    param (
+        [switch]$asTsv
+    )
+    $result = $input | Get-ReadingWithSudachi -forBookIndex | Select-Object -Property "Reading", "Tokenize"
+    if ($asTsv) {
+        return $result | ForEach-Object {
+            return $_.PSObject.Properties.Value | Join-String -Separator "`t"
+        }
+    }
+    return $result
+}
